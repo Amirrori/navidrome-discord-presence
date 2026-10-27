@@ -1,0 +1,19 @@
+{{define "base"}}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>{{block "title" .}}Discord status for Navidrome{{end}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main>
+    {{template "content" .}}
+  </main>
+  <footer>
+    <a href="/">Discord status for Navidrome</a> | <a href="/privacy">Privacy notice</a>
+  </footer>
+</body>
+</html>
+{{end}}

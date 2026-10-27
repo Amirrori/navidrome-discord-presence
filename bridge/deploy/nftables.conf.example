@@ -1,0 +1,71 @@
+#!/usr/sbin/nft -f
+# Firewall for a machine or container that only runs the bridge.
+#
+# In:  events (8090) only from Navidrome, the link page (8091) only from the
+#      people who use it.
+# Out: the bridge (server and workers) may reach DNS, Navidrome for the login
+#      check and the internet on 443, and nothing else on your network.
+#      root and apt may reach DNS and the internet for updates.
+#
+# Set the addresses below. If you put a reverse proxy in front of the bridge,
+# use the proxy's address for EVENTS_FROM and WEB_FROM, and for LOGIN_CHECK
+# use the address and port NDS_NAVIDROME_URL points to (e.g. the proxy on 443).
+#
+# If Navidrome runs on this machine too, remove the "# Navidrome: " prefix from
+# the three lines below (input, output and the navidrome_out chain) so people
+# can reach it and its plugins can look up covers.
+
+flush ruleset
+
+define EVENTS_FROM = 192.0.2.10
+define WEB_FROM = { 192.0.2.0/24 }
+define LOGIN_CHECK = 192.0.2.10
+define LOGIN_CHECK_PORT = 4533
+define RESOLVERS = { 8.8.8.8, 1.1.1.1 }
+define PRIVATE4 = { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, 169.254.0.0/16, 127.0.0.0/8 }
+define PRIVATE6 = { fc00::/7, fe80::/10, ::1 }
+
+table inet nds_bridge {
+	chain input {
+		type filter hook input priority filter; policy drop;
+		iif lo accept
+		ct state established,related accept
+		ct state invalid drop
+		ip saddr $EVENTS_FROM tcp dport 8090 accept
+		ip saddr $WEB_FROM tcp dport 8091 accept
+		# Navidrome: ip saddr $WEB_FROM tcp dport 4533 accept
+		ip protocol icmp icmp type { echo-request, destination-unreachable, time-exceeded } accept
+		ip6 nexthdr icmpv6 icmpv6 type { echo-request, destination-unreachable, packet-too-big, time-exceeded, nd-neighbor-solicit, nd-neighbor-advert, nd-router-advert } accept
+	}
+
+	chain output {
+		type filter hook output priority filter; policy drop;
+		oif lo accept
+		ct state established,related accept
+		ct state invalid drop
+		ip6 nexthdr icmpv6 icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit } accept
+		meta skuid "nds-bridge" jump bridge_out
+		meta skuid 0 jump system_out
+		meta skuid "_apt" jump system_out
+		# Navidrome: meta skuid "navidrome" jump navidrome_out
+	}
+
+	chain bridge_out {
+		ip daddr $RESOLVERS udp dport 53 accept
+		ip daddr $RESOLVERS tcp dport 53 accept
+		ip daddr $LOGIN_CHECK tcp dport $LOGIN_CHECK_PORT accept
+		ip daddr $PRIVATE4 drop
+		ip6 daddr $PRIVATE6 drop
+		tcp dport 443 accept
+	}
+
+	# Navidrome: chain navidrome_out { ip daddr $RESOLVERS udp dport 53 accept; ip daddr $RESOLVERS tcp dport 53 accept; ip daddr $PRIVATE4 drop; ip6 daddr $PRIVATE6 drop; tcp dport 443 accept; }
+
+	chain system_out {
+		ip daddr $RESOLVERS udp dport 53 accept
+		ip daddr $RESOLVERS tcp dport 53 accept
+		ip daddr $PRIVATE4 drop
+		ip6 daddr $PRIVATE6 drop
+		tcp dport { 80, 443 } accept
+	}
+}

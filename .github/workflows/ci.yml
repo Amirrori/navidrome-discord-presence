@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26.10"
+  TINYGO_VERSION: "0.43.0"
+  TINYGO_SHA256: ca9fc6d055e3889462dea4450a2e42a92242d88b5c362a7ec39bdb563413d78a
+  GOVULNCHECK: golang.org/x/vuln/cmd/govulncheck@v1.9.0
+
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge/server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: bridge/server/go.mod
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: go run "$GOVULNCHECK" ./...
+      - name: Fuzz event parsing and text cleaning briefly
+        run: |
+          go test -run=^$ -fuzz=FuzzDecodeEvent -fuzztime=20s ./internal/events
+          go test -run=^$ -fuzz=FuzzCleanText -fuzztime=20s ./internal/presence
+      - name: Build static binary
+        run: CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o nds-bridge ./cmd/nds-bridge
+
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge/worker
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The worker itself needs the proprietary Discord Social SDK, which can't
+      # be downloaded here, so CI builds and runs only the SDK-independent tests.
+      - name: Build and run the unit tests
+        run: |
+          cmake -S . -B build -DNDS_BUILD_WORKER=OFF -DNDS_BUILD_TESTS=ON
+          cmake --build build
+          ctest --test-dir build --output-on-failure
+
+  plugin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: plugin/go.sum
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: go run "$GOVULNCHECK" ./...
+      - name: Install TinyGo
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -sSfL -o tinygo.tar.gz "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo${TINYGO_VERSION}.linux-amd64.tar.gz"
+          echo "${TINYGO_SHA256}  tinygo.tar.gz" | sha256sum -c -
+          tar xzf tinygo.tar.gz
+          echo "$PWD/tinygo/bin" >> "$GITHUB_PATH"
+      - run: tinygo version
+      - name: Build plugin
+        run: make package
+
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: No invisible or bidirectional control characters
+        run: |
+          if grep -rnP '[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}\x{FEFF}]' \
+              --include='*.go' --include='*.cpp' --include='*.h' --include='*.html' --include='*.md' .; then
+            echo "Invisible characters found; write them as escapes instead." >&2
+            exit 1
+          fi
+      - name: No Discord Social SDK files committed
+        run: |
+          if git ls-files | grep -E 'discord_social_sdk|libdiscord_partner_sdk|discordpp\.h|cdiscord\.h'; then
+            echo "The Discord Social SDK must not be committed." >&2
+            exit 1
+          fi
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

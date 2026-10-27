@@ -1,0 +1,55 @@
+{{template "base" .}}
+
+{{define "content"}}
+<h1>Discord status for Navidrome</h1>
+<p class="lead">Show what you're listening to on Navidrome as your Discord status.</p>
+
+{{with .Flash}}<p class="flash" role="status">{{.}}</p>{{end}}
+
+{{if not .Username}}
+<section>
+  <h2>Sign in with your Navidrome account</h2>
+  <form method="post" action="/login">
+    <input type="hidden" name="csrf" value="{{.CSRFToken}}">
+    <label>Username <input name="username" autocomplete="username" required></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+    <button type="submit">Sign in</button>
+  </form>
+  <p class="note">Your password is only checked by Navidrome and is never stored here.</p>
+</section>
+{{else}}
+<section>
+  <p>Signed in as <strong>{{.Username}}</strong>.</p>
+  {{if .Linked}}
+  <p>Linked to the Discord account <strong>{{if .DiscordName}}{{.DiscordName}}{{else}}(name not shared){{end}}</strong>
+    since {{.LinkedAt.Format "2 January 2006"}}.</p>
+  <form method="post" action="/unlink">
+    <input type="hidden" name="csrf" value="{{.CSRFToken}}">
+    <button type="submit" class="secondary">Unlink and delete my data</button>
+  </form>
+  {{else}}
+  <p>Your Discord account is not linked yet.</p>
+  <p class="note">Linking shares what you play on Navidrome with Discord and, for cover art, with a few
+    music databases. Please read the <a href="/privacy">privacy notice</a> first.</p>
+  <form method="post" action="/link">
+    <input type="hidden" name="csrf" value="{{.CSRFToken}}">
+    <button type="submit">I agree, link my Discord account</button>
+  </form>
+  {{end}}
+  <form method="post" action="/logout">
+    <input type="hidden" name="csrf" value="{{.CSRFToken}}">
+    <button type="submit" class="link">Sign out</button>
+  </form>
+</section>
+{{end}}
+
+<section class="note">
+  <h2>What this does</h2>
+  <ul>
+    <li>Discord asks you to allow the permissions <code>{{.DiscordScope}}</code>: setting your status and
+      the friends features that come with it. It cannot read or send messages.</li>
+    <li>Your status shows the track, artist and album while you play music, and clears when you stop.</li>
+    <li>You can unlink here at any time, or revoke access in Discord under User Settings, Authorized Apps.</li>
+  </ul>
+</section>
+{{end}}

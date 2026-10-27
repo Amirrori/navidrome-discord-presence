@@ -1,0 +1,21 @@
+# Example Caddy site for the bridge. The link page is public to your users;
+# the plugin endpoints (/v1/*) are only reachable from the Navidrome server,
+# so events and link queries travel over TLS as well.
+#
+# Replace the host name, the bridge address and NAVIDROME_IP with your own.
+
+presence.example.com {
+	@plugin {
+		path /v1/*
+		remote_ip NAVIDROME_IP
+	}
+	handle @plugin {
+		reverse_proxy 127.0.0.1:8090
+	}
+	handle /v1/* {
+		respond 404
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8091
+	}
+}

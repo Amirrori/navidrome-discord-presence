@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/navidrome/navidrome/refs/heads/master/plugins/manifest-schema.json",
+  "name": "Discord Status",
+  "author": "Amirrori",
+  "version": "0.1.0",
+  "description": "Shows what you're listening to as your Discord status, through Discord's official Social SDK. Needs a navidrome-discord-status bridge; no Discord tokens are stored in Navidrome.",
+  "permissions": {
+    "users": {
+      "reason": "To receive playback reports for users"
+    },
+    "http": {
+      "reason": "To send playback events to the bridge on your network, look up album artwork and Spotify links, and optionally upload artwork to uguu.se",
+      "requiredHosts": [
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "fc00::/7",
+        "coverartarchive.org",
+        "api.deezer.com",
+        "itunes.apple.com",
+        "labs.api.listenbrainz.org",
+        "uguu.se"
+      ]
+    },
+    "cache": {
+      "reason": "To cache artwork and Spotify lookups"
+    },
+    "subsonicapi": {
+      "reason": "To read track artwork for the optional uguu.se upload"
+    }
+  },
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "bridgeurl": {
+          "type": "string",
+          "title": "Bridge URL",
+          "description": "Base URL of your navidrome-discord-status bridge, e.g. http://192.0.2.17:8090",
+          "pattern": "^https?://[^/?#@]+(/[^?#]*)?$"
+        },
+        "bridgesecret": {
+          "type": "string",
+          "title": "Bridge secret",
+          "description": "The bridge's event secret, from /etc/navidrome-discord-status/credentials/event-secret on the bridge machine (at least 32 characters). Events are signed with it.",
+          "minLength": 32
+        },
+        "caaenabled": {
+          "type": "boolean",
+          "title": "Use artwork from the Cover Art Archive (for MusicBrainz-tagged music)",
+          "default": true
+        },
+        "cataloglookup": {
+          "type": "boolean",
+          "title": "Look up artwork on Deezer and iTunes by artist and album",
+          "description": "Sends artist and album names to Deezer and Apple. Nothing is uploaded.",
+          "default": true
+        },
+        "uguuenabled": {
+          "type": "boolean",
+          "title": "Upload artwork to uguu.se when no other source has it",
+          "description": "Uploads the cover from your library to uguu.se, a public file host that deletes files after about 3 hours. Anyone with the link can see it while it exists.",
+          "default": false
+        },
+        "spotifylinks": {
+          "type": "boolean",
+          "title": "Link track and artist to Spotify",
+          "description": "Resolves Spotify links through ListenBrainz so others can open what you're listening to.",
+          "default": false
+        }
+      },
+      "required": [
+        "bridgeurl",
+        "bridgesecret"
+      ]
+    },
+    "uiSchema": {
+      "type": "VerticalLayout",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/bridgeurl"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/bridgesecret",
+          "options": {
+            "format": "password"
+          }
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/caaenabled"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/cataloglookup"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/uguuenabled"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/spotifylinks"
+        }
+      ]
+    }
+  }
+}

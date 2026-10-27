@@ -1,0 +1,178 @@
+/* Colours: Catppuccin Mocha, https://catppuccin.com/palette */
+:root {
+  --crust: #11111b;
+  --mantle: #181825;
+  --base: #1e1e2e;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --overlay1: #7f849c;
+  --subtext0: #a6adc8;
+  --text: #cdd6f4;
+  --mauve: #cba6f7;
+  --lavender: #b4befe;
+  --blue: #89b4fa;
+  --green: #a6e3a1;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--base);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main {
+  max-width: 34rem;
+  margin: 3rem auto 1.5rem;
+  padding: 0 1rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.25rem;
+  color: var(--mauve);
+}
+
+h2 {
+  font-size: 1.1rem;
+  color: var(--lavender);
+}
+
+section {
+  background: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.lead,
+.note {
+  color: var(--subtext0);
+}
+
+.flash {
+  background: var(--surface0);
+  border-left: 4px solid var(--green);
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+}
+
+form {
+  margin: 0.75rem 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--surface1);
+  border-radius: 6px;
+  background: var(--crust);
+  color: var(--text);
+  font: inherit;
+}
+
+input:focus {
+  outline: 2px solid var(--lavender);
+  outline-offset: 1px;
+  border-color: var(--lavender);
+}
+
+button {
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--mauve);
+  color: var(--crust);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--lavender);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: 2px;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--surface1);
+}
+
+button.secondary:hover {
+  background: var(--surface0);
+}
+
+button.link {
+  background: none;
+  color: var(--subtext0);
+  padding: 0;
+  font-weight: normal;
+  text-decoration: underline;
+}
+
+button.link:hover {
+  color: var(--text);
+}
+
+a {
+  color: var(--blue);
+}
+
+a:hover {
+  color: var(--lavender);
+}
+
+code {
+  font-size: 0.9em;
+  background: var(--surface0);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+strong {
+  color: var(--text);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+th {
+  color: var(--lavender);
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--surface0);
+}
+
+footer {
+  max-width: 34rem;
+  margin: 0 auto 3rem;
+  padding: 0 1rem;
+  color: var(--overlay1);
+  font-size: 0.9rem;
+}

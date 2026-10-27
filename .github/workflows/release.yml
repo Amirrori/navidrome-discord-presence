@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26.10"
+  TINYGO_VERSION: "0.43.0"
+  TINYGO_SHA256: ca9fc6d055e3889462dea4450a2e42a92242d88b5c362a7ec39bdb563413d78a
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+
+      - name: Test
+        run: |
+          (cd bridge/server && go test -race ./...)
+          (cd plugin && go test -race ./...)
+
+      - name: Build the bridge
+        working-directory: bridge/server
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          for arch in amd64 arm64; do
+            for cmd in nds-bridge nds-test-event; do
+              CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags="-s -w" \
+                -o "$GITHUB_WORKSPACE/dist/${cmd}-linux-${arch}" "./cmd/${cmd}"
+            done
+          done
+
+      - name: Install TinyGo
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -sSfL -o tinygo.tar.gz "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo${TINYGO_VERSION}.linux-amd64.tar.gz"
+          echo "${TINYGO_SHA256}  tinygo.tar.gz" | sha256sum -c -
+          tar xzf tinygo.tar.gz
+          echo "$PWD/tinygo/bin" >> "$GITHUB_PATH"
+
+      - name: Build the plugin
+        working-directory: plugin
+        run: |
+          make package
+          cp discord-status.ndp "$GITHUB_WORKSPACE/dist/"
+
+      - name: Add deployment files and checksums
+        run: |
+          cp bridge/deploy/nds-bridge.service bridge/deploy/nds-bridge-admin bridge/deploy/bridge.env.example \
+            bridge/deploy/nftables.conf.example bridge/deploy/Caddyfile.example bridge/deploy/journald-retention.conf dist/
+          (cd dist && sha256sum -- * > SHA256SUMS)
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/* --title "$TAG" --generate-notes \
+            --notes "The worker isn't included: build it with the Discord Social SDK, see docs/setup.md."

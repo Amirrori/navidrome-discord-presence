@@ -1,0 +1,17 @@
+# Discord Social SDK: proprietary, download it from the Discord developer portal
+third_party/discord_social_sdk/
+
+# build output
+plugin/plugin.wasm
+plugin/*.ndp
+plugin/build/
+bridge/server/navidrome-discord-status
+bridge/worker/build/
+
+# local configuration and state
+*.local
+*.env
+config.toml
+state/
+bridge/worker/build-*/
+*.log

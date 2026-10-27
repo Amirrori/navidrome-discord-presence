@@ -1,0 +1,22 @@
+#!/bin/sh
+# Runs an nds-bridge admin command (e.g. "links list") as the service user,
+# with the service's settings and credentials. Stop the service first:
+#
+#   systemctl stop nds-bridge
+#   nds-bridge-admin links list
+#   systemctl start nds-bridge
+#
+# Running nds-bridge as root instead would leave files in the state directory
+# that the service can no longer read.
+set -eu
+CONFIG=/etc/navidrome-discord-status
+
+exec systemd-run --quiet --wait --pipe --collect \
+	--property=User=nds-bridge \
+	--property=Group=nds-bridge \
+	--property=EnvironmentFile="$CONFIG/bridge.env" \
+	--property=LoadCredential=discord-client-secret:"$CONFIG/credentials/discord-client-secret" \
+	--property=LoadCredential=event-secret:"$CONFIG/credentials/event-secret" \
+	--property=StateDirectory=navidrome-discord-status \
+	--property=StateDirectoryMode=0700 \
+	/usr/local/bin/nds-bridge "$@"

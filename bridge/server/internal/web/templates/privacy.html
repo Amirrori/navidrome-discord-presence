@@ -1,0 +1,73 @@
+{{template "base" .}}
+
+{{define "title"}}Privacy notice - Discord status for Navidrome{{end}}
+
+{{define "content"}}
+<h1>Privacy notice</h1>
+<p class="lead">How your data is used when you link Navidrome to your Discord status.</p>
+
+<section>
+  <h2>Who is responsible</h2>
+  <p>This service is run by the administrator of this Navidrome server.
+    {{if .Contact}}Contact: <strong>{{.Contact}}</strong>.{{else}}Please contact them directly with any questions.{{end}}</p>
+</section>
+
+<section>
+  <h2>What is stored, why and for how long</h2>
+  <table>
+    <thead><tr><th>Data</th><th>Purpose</th><th>Kept</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Your Navidrome username, your Discord user ID and name, the date you linked and last used it,
+          and an encrypted Discord access token</td>
+        <td>To set your Discord status</td>
+        <td>Until you unlink{{if .LinkRetentionDays}}, or {{.LinkRetentionDays}} days after it was last used{{end}}</td>
+      </tr>
+      <tr>
+        <td>A session cookie while you use this page</td>
+        <td>To keep you signed in and protect the forms (strictly necessary; no tracking)</td>
+        <td>At most 12 hours, in memory only</td>
+      </tr>
+      <tr>
+        <td>Server logs: time, IP address and Navidrome username of sign-ins and link changes</td>
+        <td>Security and fixing problems</td>
+        <td>{{.LogRetentionDays}} days</td>
+      </tr>
+      <tr>
+        <td>What you are playing: title, artist, album, timing and a cover link</td>
+        <td>To update your status</td>
+        <td>Only in memory while it is shown; not stored</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Your Navidrome password is checked by Navidrome when you sign in here and is never stored.</p>
+</section>
+
+<section>
+  <h2>Who receives it</h2>
+  <ul>
+    <li><strong>Discord</strong> (Discord Inc., USA) receives your status: track, artist, album and cover.
+      Who can see it depends on your Discord privacy settings.
+      See <a href="https://discord.com/privacy" rel="noreferrer">Discord's privacy policy</a>.</li>
+    <li>To find cover art, the server may look up the <strong>artist and album name</strong> at the
+      Cover Art Archive and ListenBrainz (MetaBrainz Foundation, USA), Deezer (France) and Apple iTunes (USA).
+      These lookups don't contain your name or account.</li>
+    <li>If the administrator enabled it, covers that can't be found elsewhere are uploaded to
+      <strong>uguu.se</strong>, a public file host that deletes files after about 3 hours.
+      Anyone with the link can see the image during that time.</li>
+  </ul>
+  <p>None of this happens before you link your account. No analytics, advertising or tracking cookies are used.</p>
+</section>
+
+<section>
+  <h2>Your choices and rights</h2>
+  <ul>
+    <li>Linking is your choice; the legal basis is your <strong>consent</strong>. You can withdraw it at
+      any time by unlinking on the start page, or in Discord under User Settings, Authorized Apps.</li>
+    <li>Unlinking deletes your stored data at once and revokes the access token at Discord.
+      Log entries expire after {{.LogRetentionDays}} days.</li>
+    <li>The start page shows what is stored about you. For a copy, correction or any other request, contact
+      the administrator.</li>
+  </ul>
+</section>
+{{end}}

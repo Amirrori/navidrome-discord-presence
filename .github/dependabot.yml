@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /bridge/server
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /plugin
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
